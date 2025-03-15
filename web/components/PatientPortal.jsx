@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const PatientPortal = () => {
   const [conversation, setConversation] = useState([
@@ -7,15 +6,14 @@ const PatientPortal = () => {
   ]);
   const [input, setInput] = useState('');
   const [expectingPostalCode, setExpectingPostalCode] = useState(false);
-  const [loadingCenters, setLoadingCenters] = useState(false);
-  const navigate = useNavigate();
+  const [medicalCenters, setMedicalCenters] = useState([]);
 
-  // Append a new message to the conversation
+  // Add a message to the conversation
   const addMessage = (sender, message) => {
     setConversation((prev) => [...prev, { sender, message }]);
   };
 
-  // Handle form submission from the chat input
+  // Handle user input submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -24,15 +22,17 @@ const PatientPortal = () => {
     setInput('');
 
     if (expectingPostalCode) {
+      // Process the postal code provided by the user
       handlePostalCode(userMessage);
     } else {
+      // Analyze the user's message to decide on the response
       handleUserMessage(userMessage);
     }
   };
 
-  // Function to analyze the user's message
+  // Analyze the user's message using simple keyword detection
   const handleUserMessage = (message) => {
-    // Keywords for symptoms likely to be managed virtually
+    // Define keywords that indicate symptoms that can be managed virtually
     const virtualKeywords = ['cough', 'fever', 'headache', 'cold', 'sore throat', 'mild'];
     const lowerMessage = message.toLowerCase();
     const canBeResolvedVirtually = virtualKeywords.some(keyword =>
@@ -40,85 +40,41 @@ const PatientPortal = () => {
     );
 
     if (canBeResolvedVirtually) {
+      // Virtual treatment advice (replace with real treatment logic)
       const treatmentAdvice = "Based on your symptoms, try taking a mild dose of paracetamol, rest well, and stay hydrated. If symptoms persist, please book an appointment with a doctor.";
       addMessage('bot', treatmentAdvice);
       addMessage('bot', "Click the 'Book Appointment' button to schedule an appointment.");
-      // Append a special message identifier that we'll use to render the booking button.
-      addMessage('bot', "BOOK_APPOINTMENT_BUTTON");
+      // Here you could enable a booking button component or route to an appointment page.
     } else {
+      // If the issue doesn't seem resolvable virtually, prompt for postal code
       addMessage('bot', "It seems your issue might not be resolvable virtually. Please reach out to the nearest medical center.");
       addMessage('bot', "Could you please provide your postal code so I can find the nearest centers?");
       setExpectingPostalCode(true);
     }
   };
 
-  // Function to fetch medical centers dynamically using real APIs
-  const fetchMedicalCenters = async (postalCode) => {
-    try {
-      // Get latitude and longitude from the postal code via Nominatim API
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${postalCode}&format=json&limit=1`);
-      const geoData = await geoRes.json();
-      if (geoData.length === 0) {
-        return [];
-      }
-      const { lat, lon } = geoData[0];
-
-      // Build an Overpass API query for hospitals, clinics, and doctor facilities within 7km radius
-      const query = `
-        [out:json];
-        (
-          node["amenity"="hospital"](around:7000,${lat},${lon});
-          node["amenity"="clinic"](around:7000,${lat},${lon});
-          node["amenity"="doctors"](around:7000,${lat},${lon});
-        );
-        out body;
-      `;
-
-      const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain"
-        },
-        body: query
-      });
-
-      const overpassData = await overpassRes.json();
-      // Map the results into a simplified format
-      const centers = overpassData.elements.map(el => ({
-        name: el.tags.name || "Unnamed Facility",
-        address: el.tags["addr:street"] || "Address not available",
-        phone: el.tags.phone || "Phone not available",
-        distance: "Within 7km" // In a real-world scenario, compute the actual distance
-      }));
-
-      return centers;
-    } catch (error) {
-      console.error("Error fetching medical centers:", error);
-      return [];
-    }
-  };
-
-  // Handle the postal code input from the user
-  const handlePostalCode = async (postalCode) => {
-    setLoadingCenters(true);
-    addMessage('bot', "Looking up medical centers near your location...");
-    const centers = await fetchMedicalCenters(postalCode);
-    if (centers.length === 0) {
-      addMessage('bot', "Sorry, no medical centers were found within 7km of your location.");
-    } else {
-      addMessage('bot', "Here are the nearest medical centers:");
-      centers.forEach(center => {
-        const centerInfo = `${center.name}\nAddress: ${center.address}\nPhone: ${center.phone}\nDistance: ${center.distance}`;
-        addMessage('bot', centerInfo);
-      });
-    }
+  // Handle postal code input and simulate lookup of nearby medical centers
+  const handlePostalCode = (postalCode) => {
+    // Replace this with a real API call if needed.
+    const centers = findNearestMedicalCenters(postalCode);
+    setMedicalCenters(centers);
+    addMessage('bot', "Here are the nearest medical centers:");
+    centers.forEach(center => {
+      const centerInfo = `${center.name}\nAddress: ${center.address}\nPhone: ${center.phone}\nDistance: ${center.distance}`;
+      addMessage('bot', centerInfo);
+    });
+    // Reset the postal code expectation flag
     setExpectingPostalCode(false);
-    setLoadingCenters(false);
   };
 
-  // Function to route the user to the appointment booking page
-  const bookAppointment = () => {
-    navigate('/appointment');
+  // Simulated function to return nearest medical centers based on postal code
+  const findNearestMedicalCenters = (postalCode) => {
+    // For demonstration, returning static sample data
+    return [
+      { name: "City Health Clinic", address: "123 Main St", phone: "123-456-7890", distance: "2 miles" },
+      { name: "Downtown Medical Center", address: "456 Elm St", phone: "987-654-3210", distance: "3 miles" },
+      { name: "Suburban Hospital", address: "789 Maple Ave", phone: "555-555-5555", distance: "5 miles" },
+    ];
   };
 
   return (
@@ -126,14 +82,13 @@ const PatientPortal = () => {
       <h2>Patient Portal</h2>
       <div style={styles.chatContainer}>
         {conversation.map((msg, index) => (
-          <div key={index} style={msg.sender === 'bot' ? styles.botMessage : styles.userMessage}>
-            {msg.message === "BOOK_APPOINTMENT_BUTTON" ? (
-              <button onClick={bookAppointment} style={styles.button}>Book Appointment</button>
-            ) : (
-              msg.message.split('\n').map((line, i) => (
-                <p key={i} style={{ margin: '4px 0' }}>{line}</p>
-              ))
-            )}
+          <div
+            key={index}
+            style={msg.sender === 'bot' ? styles.botMessage : styles.userMessage}
+          >
+            {msg.message.split('\n').map((line, i) => (
+              <p key={i} style={{ margin: '4px 0' }}>{line}</p>
+            ))}
           </div>
         ))}
       </div>
@@ -145,8 +100,10 @@ const PatientPortal = () => {
           placeholder="Type your message..."
           style={styles.input}
         />
-        <button type="submit" style={styles.button} disabled={loadingCenters}>Send</button>
+        <button type="submit" style={styles.button}>Send</button>
       </form>
+      {/* Optionally, add a booking button component below if needed */}
+      {/* <button onClick={() => navigateToBooking()} style={styles.button}>Book Appointment</button> */}
     </div>
   );
 };
