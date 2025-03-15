@@ -32,7 +32,49 @@ const PatientPortal = () => {
 
   // Analyze user's message using simple keyword detection
   const handleUserMessage = (message) => {
-    const virtualKeywords = ['cough', 'fever', 'headache', 'cold', 'sore throat', 'mild'];
+    // Define keywords that indicate symptoms that can be managed virtually
+    const virtualKeywords = [
+  // General Pain & Aches
+  'headache', 'migraine', 'muscle pain', 'joint pain', 'arthritis', 
+  'back pain', 'toothache', 'menstrual cramps', 'sore throat',
+
+  // Digestive Issues
+  'digestive issues', 'heartburn', 'acid reflux', 'indigestion', 
+  'bloating', 'gas pain', 'nausea', 'motion sickness', 'constipation', 
+  'diarrhea', 'stomach cramps', 'mild food poisoning', 'hiccups', 
+  'irritable bowel syndrome', 'acid indigestion', 'traveler’s diarrhea', 
+  'gallbladder discomfort', 'hemorrhoids', 'anal itching',
+
+  // Cold, Flu & Respiratory Issues
+  'common cold', 'flu', 'cough', 'sore throat', 'nasal congestion', 
+  'sinus pressure', 'runny nose', 'sneezing', 'fever', 'chest congestion', 
+  'post-nasal drip', 'dry cough', 'bronchitis', 'chest tightness', 
+  'whooping cough',
+
+  // Allergies & Skin Conditions
+  'seasonal allergies', 'hay fever', 'hives', 'eczema', 'skin rash', 
+  'itchy skin', 'poison ivy', 'bug bites', 'sunburn', 'dry skin', 
+  'athlete’s foot', 'minor cuts', 'swimmer’s ear', 'earwax buildup', 
+  'contact dermatitis', 'psoriasis', 'dandruff', 'seborrheic dermatitis', 
+  'scabies', 'lice', 'ringworm', 'ingrown hairs', 'razor burn', 'warts', 
+  'fungal nail infections',
+
+  // Eye & Mouth Conditions
+  'red or dry eyes', 'eye irritation', 'pink eye', 'eye strain', 
+  'eye twitching', 'cold sores', 'canker sores', 'chapped lips', 
+  'gum pain', 'mouth ulcers', 'bad breath', 'sensitive teeth',
+
+  // Urinary & Women’s Health
+  'urinary tract infection', 'vaginal yeast infection', 'menstrual pain', 
+  'bladder irritation', 'mild pelvic pain', 'breast tenderness',
+
+  // General Health Issues
+  'mild insomnia', 'anxiety', 'stress relief', 'motion sickness', 
+  'jet lag', 'dehydration', 'ear pain', 'neck pain', 'sprains', 
+  'bruises', 'shin splints', 'carpal tunnel pain', 'minor nerve pain', 
+  'minor burns', 'tendonitis', 'general body aches'
+];
+
     const lowerMessage = message.toLowerCase();
     const canBeResolvedVirtually = virtualKeywords.some(keyword =>
       lowerMessage.includes(keyword)
