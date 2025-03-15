@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 
 const PatientPortal = () => {
+  const [activeSection, setActiveSection] = useState("home");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [conversation, setConversation] = useState([
     { sender: 'bot', message: 'Hi, how can I help you today?' }
   ]);
@@ -13,7 +15,7 @@ const PatientPortal = () => {
     setConversation((prev) => [...prev, { sender, message }]);
   };
 
-  // Handle user input submission
+  // Handle chat submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -22,17 +24,14 @@ const PatientPortal = () => {
     setInput('');
 
     if (expectingPostalCode) {
-      // Process the postal code provided by the user
       handlePostalCode(userMessage);
     } else {
-      // Analyze the user's message to decide on the response
       handleUserMessage(userMessage);
     }
   };
 
-  // Analyze the user's message using simple keyword detection
+  // Analyze user's message using simple keyword detection
   const handleUserMessage = (message) => {
-    // Define keywords that indicate symptoms that can be managed virtually
     const virtualKeywords = ['cough', 'fever', 'headache', 'cold', 'sore throat', 'mild'];
     const lowerMessage = message.toLowerCase();
     const canBeResolvedVirtually = virtualKeywords.some(keyword =>
@@ -40,22 +39,18 @@ const PatientPortal = () => {
     );
 
     if (canBeResolvedVirtually) {
-      // Virtual treatment advice (replace with real treatment logic)
-      const treatmentAdvice = "Based on your symptoms, try taking a mild dose of paracetamol, rest well, and stay hydrated. If symptoms persist, please book an appointment with a doctor.";
+      const treatmentAdvice = "Based on your symptoms, try taking a mild dose of paracetamol, rest well, and stay hydrated. If symptoms persist, please book an appointment.";
       addMessage('bot', treatmentAdvice);
-      addMessage('bot', "Click the 'Book Appointment' button to schedule an appointment.");
-      // Here you could enable a booking button component or route to an appointment page.
+      addMessage('bot', "Click the 'Book Appointment' option in the menu to schedule an appointment.");
     } else {
-      // If the issue doesn't seem resolvable virtually, prompt for postal code
       addMessage('bot', "It seems your issue might not be resolvable virtually. Please reach out to the nearest medical center.");
       addMessage('bot', "Could you please provide your postal code so I can find the nearest centers?");
       setExpectingPostalCode(true);
     }
   };
 
-  // Handle postal code input and simulate lookup of nearby medical centers
+  // Process postal code input and simulate lookup of nearby medical centers
   const handlePostalCode = (postalCode) => {
-    // Replace this with a real API call if needed.
     const centers = findNearestMedicalCenters(postalCode);
     setMedicalCenters(centers);
     addMessage('bot', "Here are the nearest medical centers:");
@@ -63,13 +58,11 @@ const PatientPortal = () => {
       const centerInfo = `${center.name}\nAddress: ${center.address}\nPhone: ${center.phone}\nDistance: ${center.distance}`;
       addMessage('bot', centerInfo);
     });
-    // Reset the postal code expectation flag
     setExpectingPostalCode(false);
   };
 
   // Simulated function to return nearest medical centers based on postal code
   const findNearestMedicalCenters = (postalCode) => {
-    // For demonstration, returning static sample data
     return [
       { name: "City Health Clinic", address: "123 Main St", phone: "123-456-7890", distance: "2 miles" },
       { name: "Downtown Medical Center", address: "456 Elm St", phone: "987-654-3210", distance: "3 miles" },
@@ -77,9 +70,29 @@ const PatientPortal = () => {
     ];
   };
 
-  return (
-    <div style={styles.container}>
-      <h2>Patient Portal</h2>
+  // Render content based on active section
+  const renderSection = () => {
+    switch(activeSection) {
+      case "home":
+        return renderChatSection();
+      case "aboutus":
+        return renderAboutUs();
+      case "contact":
+        return renderContactUs();
+      case "book":
+        return renderCalendar();
+      case "profile":
+        return renderProfile();
+      case "notifications":
+        return renderNotifications();
+      default:
+        return renderChatSection();
+    }
+  };
+
+  // Chat (Home) section with the AI chatbot
+  const renderChatSection = () => (
+    <div>
       <div style={styles.chatContainer}>
         {conversation.map((msg, index) => (
           <div
@@ -102,20 +115,138 @@ const PatientPortal = () => {
         />
         <button type="submit" style={styles.button}>Send</button>
       </form>
-      {/* Optionally, add a booking button component below if needed */}
-      {/* <button onClick={() => navigateToBooking()} style={styles.button}>Book Appointment</button> */}
+    </div>
+  );
+
+  // About Us section
+  const renderAboutUs = () => (
+    <div style={styles.section}>
+      <h2>About Us</h2>
+      <p>
+        Welcome to ClickToHeal, a healthcare portal dedicated to connecting patients with quality medical care. Our service offers virtual assistance and streamlined appointment booking with trusted healthcare providers.
+      </p>
+    </div>
+  );
+
+  // Contact Us section
+  const renderContactUs = () => (
+    <div style={styles.section}>
+      <h2>Contact Us</h2>
+      <p>Email: support@clicktoheal.com</p>
+      <p>Phone: 1-800-123-4567</p>
+    </div>
+  );
+
+  // Book Appointment section (Calendar placeholder)
+  const renderCalendar = () => (
+    <div style={styles.section}>
+      <h2>Book an Appointment</h2>
+      <p>[Calendar Component Placeholder]</p>
+      {/* Integrate a calendar component such as FullCalendar for real functionality */}
+    </div>
+  );
+
+  // Profile section with a form for personal details
+  const renderProfile = () => (
+    <div style={styles.section}>
+      <h2>Profile</h2>
+      <form style={styles.profileForm}>
+        <input type="email" placeholder="Email" style={styles.input} />
+        <input type="text" placeholder="Phone Number" style={styles.input} />
+        <input type="date" placeholder="Date of Birth" style={styles.input} />
+        <input type="number" placeholder="Weight (kg)" style={styles.input} />
+        <input type="number" placeholder="Height (cm)" style={styles.input} />
+        <input type="text" placeholder="First Name" style={styles.input} />
+        <input type="text" placeholder="Last Name" style={styles.input} />
+        <button type="submit" style={styles.button}>Update Profile</button>
+      </form>
+    </div>
+  );
+
+  // Notifications section
+  const renderNotifications = () => (
+    <div style={styles.section}>
+      <h2>Notifications</h2>
+      <ul>
+        <li>Account created successfully.</li>
+        <li>You have an appointment tomorrow at 10:00 AM.</li>
+        <li>You missed your appointment on 09/25.</li>
+      </ul>
+    </div>
+  );
+
+  return (
+    <div style={styles.container}>
+      {/* Header with hamburger menu */}
+      <header style={styles.header}>
+        <button style={styles.hamburger} onClick={() => setMenuOpen(!menuOpen)}>
+          &#9776;
+        </button>
+        <h1>ClickToHeal Patient Portal</h1>
+      </header>
+
+      {/* Side Navigation Menu */}
+      {menuOpen && (
+        <nav style={styles.sidebar}>
+          <ul style={styles.menuList}>
+            <li style={styles.menuItem} onClick={() => { setActiveSection("home"); setMenuOpen(false); }}>Home</li>
+            <li style={styles.menuItem} onClick={() => { setActiveSection("aboutus"); setMenuOpen(false); }}>About Us</li>
+            <li style={styles.menuItem} onClick={() => { setActiveSection("contact"); setMenuOpen(false); }}>Contact Us</li>
+            <li style={styles.menuItem} onClick={() => { setActiveSection("book"); setMenuOpen(false); }}>Book Appointment</li>
+            <li style={styles.menuItem} onClick={() => { setActiveSection("profile"); setMenuOpen(false); }}>Profile</li>
+            <li style={styles.menuItem} onClick={() => { setActiveSection("notifications"); setMenuOpen(false); }}>Notifications</li>
+          </ul>
+        </nav>
+      )}
+
+      {/* Main Content Section */}
+      <main style={styles.mainContent}>
+        {renderSection()}
+      </main>
     </div>
   );
 };
 
 const styles = {
   container: {
-    maxWidth: '600px',
-    margin: '20px auto',
-    padding: '20px',
     fontFamily: 'Arial, sans-serif',
-    border: '1px solid #ccc',
-    borderRadius: '8px'
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '10px',
+    backgroundColor: '#007bff',
+    color: '#fff',
+  },
+  hamburger: {
+    fontSize: '24px',
+    marginRight: '20px',
+    background: 'none',
+    border: 'none',
+    color: '#fff',
+    cursor: 'pointer',
+  },
+  sidebar: {
+    position: 'absolute',
+    top: '50px',
+    left: '0',
+    width: '200px',
+    backgroundColor: '#f4f4f4',
+    borderRight: '1px solid #ddd',
+    padding: '10px',
+  },
+  menuList: {
+    listStyle: 'none',
+    padding: '0',
+  },
+  menuItem: {
+    padding: '8px 0',
+    cursor: 'pointer',
+    borderBottom: '1px solid #ddd',
+  },
+  mainContent: {
+    padding: '20px',
+    marginTop: '10px',
   },
   chatContainer: {
     border: '1px solid #ddd',
@@ -158,7 +289,17 @@ const styles = {
     backgroundColor: '#007bff',
     color: '#fff',
     cursor: 'pointer'
-  }
+  },
+  section: {
+    margin: '20px 0',
+  },
+  profileForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    maxWidth: '400px',
+  },
 };
 
 export default PatientPortal;
+
