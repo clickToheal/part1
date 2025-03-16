@@ -9,7 +9,11 @@ const PatientPortal = () => {
   const [input, setInput] = useState('');
   const [expectingPostalCode, setExpectingPostalCode] = useState(false);
   const [medicalCenters, setMedicalCenters] = useState([]);
-
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('');
+  const [appointmentVisible, setAppointmentVisible] = useState(false);
+  const [appointmentStep, setAppointmentStep] = useState(false); // New state for appointment step
+  
   // Add a message to the conversation
   const addMessage = (sender, message) => {
     setConversation((prev) => [...prev, { sender, message }]);
@@ -32,48 +36,14 @@ const PatientPortal = () => {
 
   // Analyze user's message using simple keyword detection
   const handleUserMessage = (message) => {
-    // Define keywords that indicate symptoms that can be managed virtually
     const virtualKeywords = [
-  // General Pain & Aches
-  'headache', 'migraine', 'muscle pain', 'joint pain', 'arthritis', 
-  'back pain', 'toothache', 'menstrual cramps', 'sore throat',
-
-  // Digestive Issues
-  'digestive issues', 'heartburn', 'acid reflux', 'indigestion', 
-  'bloating', 'gas pain', 'nausea', 'motion sickness', 'constipation', 
-  'diarrhea', 'stomach cramps', 'mild food poisoning', 'hiccups', 
-  'irritable bowel syndrome', 'acid indigestion', 'traveler’s diarrhea', 
-  'gallbladder discomfort', 'hemorrhoids', 'anal itching',
-
-  // Cold, Flu & Respiratory Issues
-  'common cold', 'flu', 'cough', 'sore throat', 'nasal congestion', 
-  'sinus pressure', 'runny nose', 'sneezing', 'fever', 'chest congestion', 
-  'post-nasal drip', 'dry cough', 'bronchitis', 'chest tightness', 
-  'whooping cough',
-
-  // Allergies & Skin Conditions
-  'seasonal allergies', 'hay fever', 'hives', 'eczema', 'skin rash', 
-  'itchy skin', 'poison ivy', 'bug bites', 'sunburn', 'dry skin', 
-  'athlete’s foot', 'minor cuts', 'swimmer’s ear', 'earwax buildup', 
-  'contact dermatitis', 'psoriasis', 'dandruff', 'seborrheic dermatitis', 
-  'scabies', 'lice', 'ringworm', 'ingrown hairs', 'razor burn', 'warts', 
-  'fungal nail infections',
-
-  // Eye & Mouth Conditions
-  'red or dry eyes', 'eye irritation', 'pink eye', 'eye strain', 
-  'eye twitching', 'cold sores', 'canker sores', 'chapped lips', 
-  'gum pain', 'mouth ulcers', 'bad breath', 'sensitive teeth',
-
-  // Urinary & Women’s Health
-  'urinary tract infection', 'vaginal yeast infection', 'menstrual pain', 
-  'bladder irritation', 'mild pelvic pain', 'breast tenderness',
-
-  // General Health Issues
-  'mild insomnia', 'anxiety', 'stress relief', 'motion sickness', 
-  'jet lag', 'dehydration', 'ear pain', 'neck pain', 'sprains', 
-  'bruises', 'shin splints', 'carpal tunnel pain', 'minor nerve pain', 
-  'minor burns', 'tendonitis', 'general body aches'
-];
+      'headache', 'migraine', 'muscle pain', 'joint pain', 'arthritis',
+      'back pain', 'toothache', 'menstrual cramps', 'sore throat', 'digestive issues',
+      'heartburn', 'acid reflux', 'indigestion', 'bloating', 'gas pain', 'nausea', 
+      'motion sickness', 'constipation', 'diarrhea', 'stomach cramps', 'common cold', 
+      'flu', 'cough', 'seasonal allergies', 'hay fever', 'eczema', 'skin rash', 
+      'eye irritation', 'cold sores', 'urinary tract infection', 'anxiety', 'stress relief'
+    ];
 
     const lowerMessage = message.toLowerCase();
     const canBeResolvedVirtually = virtualKeywords.some(keyword =>
@@ -84,6 +54,7 @@ const PatientPortal = () => {
       const treatmentAdvice = "Based on your symptoms, try taking a mild dose of paracetamol, rest well, and stay hydrated. If symptoms persist, please book an appointment.";
       addMessage('bot', treatmentAdvice);
       addMessage('bot', "Click the 'Book Appointment' option in the menu to schedule an appointment.");
+      setAppointmentVisible(true);
     } else {
       addMessage('bot', "It seems your issue might not be resolvable virtually. Please reach out to the nearest medical center.");
       addMessage('bot', "Could you please provide your postal code so I can find the nearest centers?");
@@ -101,6 +72,7 @@ const PatientPortal = () => {
       addMessage('bot', centerInfo);
     });
     setExpectingPostalCode(false);
+    setAppointmentStep(true); // Show the appointment button after postal code
   };
 
   // Simulated function to return nearest medical centers based on postal code
@@ -110,6 +82,19 @@ const PatientPortal = () => {
       { name: "Downtown Medical Center", address: "456 Elm St", phone: "987-654-3210", distance: "3 miles" },
       { name: "Suburban Hospital", address: "789 Maple Ave", phone: "555-555-5555", distance: "5 miles" },
     ];
+  };
+
+  // Handle form submission for booking appointment
+  const handleAppointmentSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!appointmentDate || !appointmentTime) {
+      alert("Please select both a date and a time.");
+      return;
+    }
+
+    addMessage('bot', `Your appointment has been booked for ${appointmentDate} at ${appointmentTime}.`);
+    setAppointmentVisible(false); // Hide the appointment form after submission
   };
 
   // Render content based on active section
@@ -157,6 +142,16 @@ const PatientPortal = () => {
         />
         <button type="submit" style={styles.button}>Send</button>
       </form>
+      {appointmentStep && (
+        <div style={styles.appointmentButtonContainer}>
+          <button 
+            onClick={() => setActiveSection("book")} 
+            style={styles.appointmentButton}
+          >
+            Make Appointment
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -179,12 +174,30 @@ const PatientPortal = () => {
     </div>
   );
 
-  // Book Appointment section (Calendar placeholder)
+  // Book Appointment section (Date and Time selection)
   const renderCalendar = () => (
     <div style={styles.section}>
       <h2>Book an Appointment</h2>
-      <p>[Calendar Component Placeholder]</p>
-      {/* Integrate a calendar component such as FullCalendar for real functionality */}
+      <p>Please select your preferred date and time for the appointment.</p>
+      <form onSubmit={handleAppointmentSubmit} style={styles.appointmentForm}>
+        <input
+          type="date"
+          id="appointmentDate"
+          value={appointmentDate}
+          onChange={(e) => setAppointmentDate(e.target.value)}
+          style={styles.input}
+          required
+        />
+        <input
+          type="time"
+          id="appointmentTime"
+          value={appointmentTime}
+          onChange={(e) => setAppointmentTime(e.target.value)}
+          style={styles.input}
+          required
+        />
+        <button type="submit" style={styles.button}>Book Appointment</button>
+      </form>
     </div>
   );
 
@@ -332,6 +345,19 @@ const styles = {
     color: '#fff',
     cursor: 'pointer'
   },
+  appointmentButtonContainer: {
+    marginTop: '10px',
+    textAlign: 'center'
+  },
+  appointmentButton: {
+    padding: '10px 15px',
+    fontSize: '16px',
+    backgroundColor: '#28a745',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer'
+  },
   section: {
     margin: '20px 0',
   },
@@ -341,7 +367,12 @@ const styles = {
     gap: '12px',
     maxWidth: '400px',
   },
+  appointmentForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    maxWidth: '400px',
+  },
 };
 
 export default PatientPortal;
-
